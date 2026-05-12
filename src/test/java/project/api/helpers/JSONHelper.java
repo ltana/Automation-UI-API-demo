@@ -162,4 +162,15 @@ public class JSONHelper {
         }
         return null;
     }
+
+    public Object parseValueToType(String value, String targetType) {
+        return switch (targetType) {
+            case "Float" -> parsStringToFloat(value);
+            case "Integer" -> parsStringToInt(value);
+            case "Boolean" -> parseStringToBoolean(value);
+            case "Double" -> parsStringToDouble(value);
+            case "Long" -> parsStringToLong(value);
+            default -> value;
+        };
+    }
 }

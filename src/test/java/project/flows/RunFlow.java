@@ -2,16 +2,14 @@ package project.flows;
 
 import java.net.MalformedURLException;
 
-public class RunFlow {
-    public void createDriver() throws MalformedURLException {
-    }
+public interface RunFlow {
 
-    public void getAPIBaseUrl() {
-    }
+    void createDriver() throws MalformedURLException;
 
-    public void afterScenario() {
-    }
+    void getAPIBaseUrl();
 
-    public void beforeScenario() {
+    void afterScenario();
+
+    default void beforeScenario() {
     }
 }

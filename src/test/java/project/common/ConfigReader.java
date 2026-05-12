@@ -1,7 +1,9 @@
 package project.common;
 
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.testng.ITestContext;
+
+import java.net.URI;
 
 import project.platform.Platform;
 import static project.plugins.InitializePlugin.*;
@@ -53,7 +55,7 @@ public class ConfigReader {
     }
 
     public static synchronized void setLogConfig() {
-        PropertyConfigurator.configure("src/main/resources/log4j2.properties");
+        Configurator.reconfigure(URI.create("classpath:log4j2.properties"));
     }
 
     public static void setPlatform(ITestContext testContext) {

@@ -22,7 +22,7 @@ variables:
   HTTPS_PROXY: HTTPS_PROXY
   NO_PROXY: localhost,127.0.0.0/8
   MAVEN_CLI_OPTS: "-e -s helpers/mvn-setting.xml --batch-mode"
-  SPOT_BUGS_GOAL: "spotbug:spotbug"
+  SPOT_BUGS_GOAL: "spotbugs:spotbugs"
 
 default:
   artifacts:
@@ -44,6 +44,7 @@ default:
     - mvn --version
 
 stages:
+  - quality
   - test-full
   - test-failed
   - test
@@ -52,6 +53,21 @@ stages:
   - deploy
   - post deploy
   - rollback
+
+quality-gate:
+  stage: quality
+  script:
+    - mvn verify -DskipTests $MAVEN_CLI_OPTS
+  artifacts:
+    name: "quality-reports"
+    expire_in: 5 days
+    paths:
+      - target/spotbugsXml.xml
+      - target/checkstyle-result.xml
+    when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: '$SCHEDULED_JOB_TO_RUN == "QUALITY"'
 
 API:
   stage: test

@@ -1,49 +1,28 @@
 package project.common;
 
-
 import org.yaml.snakeyaml.Yaml;
 import project.enums.Environments;
 
 import java.io.InputStream;
 import java.util.Map;
 
-/**
- * @author shashitiwari
- */
 public class YamlParser {
 
     Yaml yaml;
     InputStream inputStream;
     Map<String, Object> dataMap;
 
-    /**
-     * @param env
-     * @return
-     */
     public void parseYaml(Environments env) {
-
         yaml = new Yaml();
 
-        switch (env) {
-            case TEST:
-                inputStream = this.getClass().getClassLoader().getResourceAsStream("testdata_test.yml");
-                break;
+        String fileName = switch (env) {
+            case TEST -> "testdata_test.yml";
+            case UAT -> "testdata_uat.yml";
+            case PREPROD -> "testdata_preprod.yml";
+            case PROD -> "testdata_prod.yml";
+        };
 
-            case UAT:
-                inputStream = this.getClass().getClassLoader().getResourceAsStream("testdata_uat.yml");
-                break;
-
-            case PREPROD:
-                inputStream = this.getClass().getClassLoader().getResourceAsStream("testdata_preprod.yml");
-                break;
-
-            case PROD:
-                inputStream = this.getClass().getClassLoader().getResourceAsStream("testdata_prod.yml");
-                break;
-
-            default:
-                throw new IllegalStateException("invalid environment provided" + env);
-        }
+        inputStream = this.getClass().getClassLoader().getResourceAsStream(fileName);
         dataMap = yaml.load(inputStream);
         Context.setYamlData(dataMap);
     }
@@ -60,55 +39,32 @@ public class YamlParser {
         Context.setTranslationData(yaml.load(inputStream));
     }
 
-    /**
-     * @param key
-     * @return
-     */
     @SuppressWarnings("unchecked")
-    public static Object getYmlValue(String key) {
-
-        try {
-            final String[] tmpKeys = key.split("\\.");
-
-            Map<String, Object> currentMap = Context.getYamlData();
-
-            for (int i = 0; i < tmpKeys.length - 1; i++) {
-                currentMap = (Map<String, Object>) currentMap.get(tmpKeys[i]);
-            }
-            return currentMap.get(tmpKeys[tmpKeys.length - 1]);
-        } catch (Exception exception) {
-            return ' ';
+    private static Object getNestedValue(Map<String, Object> dataMap, String key) {
+        if (dataMap == null) {
+            throw new IllegalStateException("Data map is not initialized for key: " + key);
         }
+        final String[] tmpKeys = key.split("\\.");
+        Map<String, Object> currentMap = dataMap;
+        for (int i = 0; i < tmpKeys.length - 1; i++) {
+            Object nested = currentMap.get(tmpKeys[i]);
+            if (nested == null) {
+                throw new IllegalArgumentException("Key segment '%s' not found in path: %s".formatted(tmpKeys[i], key));
+            }
+            currentMap = (Map<String, Object>) nested;
+        }
+        return currentMap.get(tmpKeys[tmpKeys.length - 1]);
     }
 
-    /**
-     * @param key
-     * @return
-     */
-    @SuppressWarnings("unchecked")
+    public static Object getYmlValue(String key) {
+        return getNestedValue(Context.getYamlData(), key);
+    }
+
     public static Object getConfigValue(String key) {
-        try {
-            final String[] tmpKeys = key.split("\\.");
-            Map<String, Object> currentMap = Context.getConfigData();
-            for (int i = 0; i < tmpKeys.length - 1; i++) {
-                currentMap = (Map<String, Object>) currentMap.get(tmpKeys[i]);
-            }
-            return currentMap.get(tmpKeys[tmpKeys.length - 1]);
-        } catch (Exception exception) {
-            return ' ';
-        }
+        return getNestedValue(Context.getConfigData(), key);
     }
 
     public static Object getTranslationValue(String key) {
-        try {
-            final String[] tmpKeys = key.split("\\.");
-            Map<String, Object> currentMap = Context.getTranslationData();
-            for (int i = 0; i < tmpKeys.length - 1; i++) {
-                currentMap = (Map<String, Object>) currentMap.get(tmpKeys[i]);
-            }
-            return currentMap.get(tmpKeys[tmpKeys.length - 1]);
-        } catch (Exception exception) {
-            return ' ';
-        }
+        return getNestedValue(Context.getTranslationData(), key);
     }
 }

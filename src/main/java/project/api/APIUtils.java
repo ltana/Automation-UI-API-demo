@@ -1,6 +1,5 @@
 package project.api;
 
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.apache.logging.log4j.LogManager;
@@ -19,17 +18,24 @@ import static project.common.Context.getJwtPayload;
 public class APIUtils {
     public static ThreadLocal<Logger> logger = ThreadLocal.withInitial(() -> LogManager.getLogger(String.valueOf(Thread.currentThread().getName())));
 
-    public static String baseUrlAccountsAPI;
+    private static final ThreadLocal<String> baseUrlAccountsAPI = new ThreadLocal<>();
+
+    public static String getBaseUrlAccountsAPI() {
+        return baseUrlAccountsAPI.get();
+    }
+
+    public static void setBaseUrlAccountsAPI(String url) {
+        baseUrlAccountsAPI.set(url);
+    }
 
     public static void postResponse(String body, String pathUrl, String endpoint) {
-        setRestAssuredBaseUrl(endpoint);
+        String baseUrl = resolveBaseUrl(endpoint);
 
         String traceId = generateTraceId();
         String[] keyParts = traceId.split("-");
         String key = keyParts[0] + keyParts[keyParts.length - 1];
 
-        // Generate Signature
-        String checksum = null;
+        String checksum;
         try {
             checksum = generateSignature(body, key);
         } catch (Exception e) {
@@ -38,6 +44,7 @@ public class APIUtils {
 
         String jwt = JWTUtils.generateJwt(getJwtPayload());
         Response responsePost = given()
+            .baseUri(baseUrl)
             .contentType(ContentType.JSON)
             .relaxedHTTPSValidation()
             .header("x-project-trace-id", traceId)
@@ -71,10 +78,11 @@ public class APIUtils {
         return encoder.encodeToString(result);
     }
 
-    public static void setRestAssuredBaseUrl(String endpoint) {
+    private static String resolveBaseUrl(String endpoint) {
         if (endpoint.equals("baseUrlAccounts")) {
-            RestAssured.baseURI = baseUrlAccountsAPI;
+            return getBaseUrlAccountsAPI();
         }
+        throw new IllegalArgumentException("Unknown endpoint: " + endpoint);
     }
 
     public static int getStatusCode() {

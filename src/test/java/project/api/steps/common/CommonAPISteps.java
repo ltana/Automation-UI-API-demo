@@ -27,21 +27,19 @@ import static project.common.Context.*;
 
 public class CommonAPISteps {
 
+    private final JSONHelper jsonHelper = new JSONHelper();
+
     @Given("User set request body to {string} from {string} folder")
     public void userSetRequestBodyFromFile(String requestFile, String fileFolder) {
         setRequestBody(getFile("requests", fileFolder, requestFile));
-        if (getRunEnv().equals(Environments.UAT)) {
-
+        if (isUatEnvironment()) {
             JsonObject jsonObject = JsonParser.parseString(getRequestBody()).getAsJsonObject();
-
             JsonObject headerObject = jsonObject.getAsJsonObject("header");
-
             String userId = headerObject.get("userId").getAsString();
 
             JWTPayload jwtPayload = defaultJWTPayload();
             jwtPayload.setUserId(userId);
-            jwtPayload.setDeviceProfile(String.format(
-                deviceProfile));
+            jwtPayload.setDeviceProfile(String.format(deviceProfile));
             setJwtPayload(jwtPayload);
         }
     }
@@ -50,64 +48,13 @@ public class CommonAPISteps {
     public void userSetRequestBodyWithoutParameter(DataTable testData) {
         String body = getRequestBody();
         List<Map<String, String>> requestParameters = testData.asMaps(String.class, String.class);
+
         for (Map<String, String> requestParameter : requestParameters) {
-            if ((getRunEnv().equals(Environments.UAT)) &&
-                (requestParameter.get("requestParameter").equals("header.userId") )){
+            String param = requestParameter.get("requestParameter");
+            body = jsonHelper.deleteJsonParameter(body, param);
 
-                body = new JSONHelper()
-                    .deleteJsonParameter(body, requestParameter.get("requestParameter"));
-
-                if (requestParameter.get("requestParameter").equals("header.userId")) {
-                    JWTPayload jwtPayload = getJwtPayload();
-
-                    JWTPayload updatedPayload = new JWTPayload();
-
-                    Field[] fields = JWTPayload.class.getDeclaredFields();
-
-                    for (Field field : fields) {
-                        field.setAccessible(true);
-                        if (!field.getName().equals("userId")) {
-                            try {
-                                field.set(updatedPayload, field.get(jwtPayload));
-                            } catch (IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-
-                    setJwtPayload(updatedPayload);
-                } else if (requestParameter.get("requestParameter").equals("header.userId")) {
-                    JWTPayload jwtPayload = getJwtPayload();
-                    JWTPayload updatedPayload = new JWTPayload();
-
-                    Field[] fields = JWTPayload.class.getDeclaredFields();
-
-                    for (Field field : fields) {
-                        field.setAccessible(true);
-                        if (!field.getName().equals("userId")) {
-                            try {
-                                field.set(updatedPayload, field.get(jwtPayload));
-                            } catch (IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-
-                    setJwtPayload(updatedPayload);
-                } else if (requestParameter.get("requestParameter").equals("paramenter")) {
-                    JWTPayload jwtPayload = getJwtPayload();
-
-                    String removedPart = "\"identifier\":\"%s\",";
-                    String modifiedDeviceProfile = deviceProfile.replace(removedPart, "");
-
-                    jwtPayload.setDeviceProfile(String.format(
-                        modifiedDeviceProfile, ""));
-
-                    setJwtPayload(jwtPayload);
-                }
-            } else {
-                body = new JSONHelper()
-                    .deleteJsonParameter(body, requestParameter.get("requestParameter"));
+            if (isUatEnvironment()) {
+                adjustJwtAfterRemoval(param);
             }
         }
         setRequestBody(body);
@@ -117,30 +64,14 @@ public class CommonAPISteps {
     public void userSetsRequestWithParameters(DataTable testData) {
         String body = getRequestBody();
         List<Map<String, String>> requestParameters = testData.asMaps(String.class, String.class);
-        for (Map<String, String> requestParameter : requestParameters) {
-            if ((getRunEnv().equals(Environments.UAT)) &&
-                (requestParameter.get("requestParameter").equals("header.userId"))) {
-                body = new JSONHelper()
-                    .updateJsonValue(body, requestParameter.get("requestParameter"),
-                        requestParameter.get("requestValue"));
 
-                if (requestParameter.get("requestParameter").equals("header.userId")) {
-                    JWTPayload jwtPayload = getJwtPayload();
-                    setJwtPayload(jwtPayload);
-                } else if (requestParameter.get("requestParameter").equals("paramenter")) {
-                    JWTPayload jwtPayload = getJwtPayload();
-                    String modifiedDeviceProfile = deviceProfile;
-                    if (requestParameter.get("requestValue") == null) {
-                        modifiedDeviceProfile = deviceProfile.replace("\"%s\"", "%s");
-                    }
-                    jwtPayload.setDeviceProfile(String.format(
-                        modifiedDeviceProfile, requestParameter.get("requestValue")));
-                    setJwtPayload(jwtPayload);
-                }
-            } else {
-                body = new JSONHelper()
-                    .updateJsonValue(body, requestParameter.get("requestParameter"),
-                        requestParameter.get("requestValue"));
+        for (Map<String, String> requestParameter : requestParameters) {
+            String param = requestParameter.get("requestParameter");
+            String value = requestParameter.get("requestValue");
+            body = jsonHelper.updateJsonValue(body, param, value);
+
+            if (isUatEnvironment()) {
+                adjustJwtAfterUpdate(param, value);
             }
         }
         setRequestBody(body);
@@ -149,8 +80,7 @@ public class CommonAPISteps {
     @When("User makes a POST request to {string} resource from {string} endpoint")
     public void postRequestTo(String pathURL, String endpoint) {
         String body = getRequestBody();
-        body = new JSONHelper()
-            .deleteJsonParameter(body, "header.userId");
+        body = jsonHelper.deleteJsonParameter(body, "header.userId");
         setRequestBody(body);
         postResponse(getRequestBody(), pathURL, endpoint);
     }
@@ -162,59 +92,25 @@ public class CommonAPISteps {
                 + ", response is " + getResponse().asPrettyString());
     }
 
-
     @And("Response has next returned values:$")
-    public void responseHasNextReturnedValues(DataTable testData)  {
+    public void responseHasNextReturnedValues(DataTable testData) {
         var response = getResponse().getBody();
-
         List<Map<String, String>> responseParameters = testData.asMaps(String.class, String.class);
 
         for (Map<String, String> responseParameter : responseParameters) {
-            var responseValueType = response.jsonPath().get(responseParameter.get("responseParameter")).getClass().getSimpleName();
-            switch (responseValueType) {
-                case "Float" -> {
-                    Float fLoatValue = new JSONHelper().parsStringToFloat(responseParameter.get("responseValue"));
-                    assertEquals(response.jsonPath().get(responseParameter.get("responseParameter")),
-                        fLoatValue,
-                        "Response parameter " + responseParameter.get("responseParameter") + " is not "
-                            + responseParameter.get("responseValue"));
-                }
-                case "Integer" -> {
-                    Integer integerValue = new JSONHelper().parsStringToInt(responseParameter.get("responseValue"));
-                    assertEquals(response.jsonPath().get(responseParameter.get("responseParameter")),
-                        integerValue,
-                        "Response parameter " + responseParameter.get("responseParameter") + " is not "
-                            + responseParameter.get("responseValue"));
-                }
-                case "Boolean" -> {
-                    Boolean boolValue = new JSONHelper().parseStringToBoolean(responseParameter.get("responseValue"));
-                    assertEquals(response.jsonPath().get(responseParameter.get("responseParameter")),
-                        boolValue,
-                        "Response parameter " + responseParameter.get("responseParameter") + " is not "
-                            + responseParameter.get("responseValue"));
-                }
-                case "Double" -> {
-                    Double doubleValue = new JSONHelper().parsStringToDouble(responseParameter.get("responseValue"));
-                    assertEquals(response.jsonPath().get(responseParameter.get("responseParameter")),
-                        doubleValue,
-                        "Response parameter " + responseParameter.get("responseParameter") + " is not "
-                            + responseParameter.get("responseValue"));
-                }
-                case "Long" -> {
-                    Long longValue = new JSONHelper().parsStringToLong(responseParameter.get("responseValue"));
-                    assertEquals(response.jsonPath().get(responseParameter.get("responseParameter")),
-                        longValue,
-                        "Response parameter " + responseParameter.get("responseParameter") + " is not "
-                            + responseParameter.get("responseValue"));
-                }
-                default -> {
-                    String expectedResponseValue = responseParameter.get("responseValue");
-                    String actualResponseValue = response.jsonPath().get(responseParameter.get("responseParameter")).toString().strip();
-                    assertEquals(actualResponseValue,
-                        expectedResponseValue,
-                        "Response parameter [%s] is not [%s]".formatted(actualResponseValue, expectedResponseValue));
-                }
+            String paramPath = responseParameter.get("responseParameter");
+            String expectedStr = responseParameter.get("responseValue");
+
+            Object actualValue = response.jsonPath().get(paramPath);
+            String valueType = actualValue.getClass().getSimpleName();
+
+            Object expectedValue = jsonHelper.parseValueToType(expectedStr, valueType);
+            if ("String".equals(valueType)) {
+                actualValue = actualValue.toString().strip();
             }
+
+            assertEquals(actualValue, expectedValue,
+                "Response parameter [%s] is not [%s]".formatted(paramPath, expectedStr));
         }
     }
 
@@ -223,5 +119,50 @@ public class CommonAPISteps {
         Context.getResponse().then().assertThat()
             .body(JsonSchemaValidator
                 .matchesJsonSchema(getFile("schemas", fileFolder, schemaFile)));
+    }
+
+    private boolean isUatEnvironment() {
+        return Environments.UAT.equals(getRunEnv());
+    }
+
+    private void adjustJwtAfterRemoval(String param) {
+        if ("header.userId".equals(param)) {
+            setJwtPayload(copyJwtPayloadWithoutField(getJwtPayload(), "userId"));
+        } else if ("paramenter".equals(param)) {
+            JWTPayload jwtPayload = getJwtPayload();
+            String removedPart = "\"identifier\":\"%s\",";
+            String modifiedDeviceProfile = deviceProfile.replace(removedPart, "");
+            jwtPayload.setDeviceProfile(String.format(modifiedDeviceProfile, ""));
+            setJwtPayload(jwtPayload);
+        }
+    }
+
+    private void adjustJwtAfterUpdate(String param, String value) {
+        if ("header.userId".equals(param)) {
+            setJwtPayload(getJwtPayload());
+        } else if ("paramenter".equals(param)) {
+            JWTPayload jwtPayload = getJwtPayload();
+            String modifiedDeviceProfile = deviceProfile;
+            if (value == null) {
+                modifiedDeviceProfile = deviceProfile.replace("\"%s\"", "%s");
+            }
+            jwtPayload.setDeviceProfile(String.format(modifiedDeviceProfile, value));
+            setJwtPayload(jwtPayload);
+        }
+    }
+
+    private JWTPayload copyJwtPayloadWithoutField(JWTPayload source, String excludeField) {
+        JWTPayload copy = new JWTPayload();
+        for (Field field : JWTPayload.class.getDeclaredFields()) {
+            field.setAccessible(true);
+            if (!field.getName().equals(excludeField)) {
+                try {
+                    field.set(copy, field.get(source));
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return copy;
     }
 }
