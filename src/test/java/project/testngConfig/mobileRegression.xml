@@ -1,0 +1,51 @@
+<?xml version = "1.0"encoding = "UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="mobileRegression" parallel="tests" thread-count="5">
+    <listeners>
+        <listener class-name="project.mobile.listeners.FailureRetryListener"/>
+    </listeners>
+    <parameter name="osType" value="android"></parameter>
+    <parameter name="deviceLanguage" value="en"></parameter>
+    <parameter name="deviceLocale" value="UK"></parameter>
+    <parameter name="appLanguage" value="en"></parameter>
+    <test name="Pixel 7 Pro">
+        <parameter name="deviceNameAndroid" value="Pixel 7 Pro"></parameter>
+        <parameter name="osVersionAndroid" value="13.0"></parameter>
+        <classes>
+            <class name="project.runner.MobileRunner">
+            </class>
+        </classes>
+    </test>
+    <test name="Samsung Galaxy S22">
+        <parameter name="deviceNameAndroid" value="Samsung Galaxy S23 Ultra"></parameter>
+        <parameter name="osVersionAndroid" value="13.0"></parameter>
+        <classes>
+            <class name="project.runner.MobileRunner">
+            </class>
+        </classes>
+    </test>
+    <test name="iPhone 14 Pro Max">
+        <parameter name="deviceNameiOS" value="iPhone 14 Pro Max"></parameter>
+        <parameter name="osVersioniOS" value="16"></parameter>
+        <classes>
+            <class name="project.runner.MobileRunner">
+            </class>
+        </classes>
+    </test>
+    <test name="iPhone SE 2020">
+        <parameter name="deviceNameiOS" value="iPhone SE 2020"></parameter>
+        <parameter name="osVersioniOS" value="16"></parameter>
+        <classes>
+            <class name="project.runner.MobileRunner">
+            </class>
+        </classes>
+    </test>
+    <test name="iPhone 13 Pro">
+        <parameter name="deviceNameiOS" value="iPhone 13 Pro"></parameter>
+        <parameter name="osVersioniOS" value="15"></parameter>
+        <classes>
+            <class name="project.runner.MobileRunner">
+            </class>
+        </classes>
+    </test>
+</suite>

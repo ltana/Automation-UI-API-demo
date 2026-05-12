@@ -1,0 +1,11 @@
+General:
+  env: test
+Mobile:
+  global:
+    userName: browserStackUser
+    accessKey: browserStackAccessKey
+    project: Project
+  android:
+    app: MyAndroidApp
+  ios:
+    app: MyiOSApp

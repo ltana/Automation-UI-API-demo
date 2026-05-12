@@ -1,0 +1,8 @@
+Common:
+  Values:
+    "Yes":
+      "en": "Yes"
+      "ar": "نعم"
+    "No":
+      "en": "No"
+      "ar": "لا"

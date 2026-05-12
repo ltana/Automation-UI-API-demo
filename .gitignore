@@ -1,0 +1,32 @@
+test-output
+target/
+log/
+logs/
+features.csv
+# exception to the rule
+!test-output/reports/.gitkeep
+!test-output/screenshots/.gitkeep
+!test-output/logs/.gitkeep
+!.mvn/wrapper/maven-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Mac OS ###
+.DS_Store
+/.java-version

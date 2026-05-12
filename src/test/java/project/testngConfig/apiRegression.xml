@@ -1,0 +1,12 @@
+<?xml version = "1.0"encoding = "UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name = "Suite API">
+    <listeners>
+        <listener class-name="project.mobile.listeners.FailureRetryListener"/>
+    </listeners>
+    <test name = "API regression">
+        <classes>
+            <class name = "project.runner.APIRegressionRunner"/>
+        </classes>
+    </test>
+</suite>

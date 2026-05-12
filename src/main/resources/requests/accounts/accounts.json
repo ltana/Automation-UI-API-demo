@@ -1,0 +1,10 @@
+{
+  "header": {
+    "userId": "userId",
+    "language": "EN"
+  },
+  "body": {
+    "number": "number",
+    "accountNumber": "accountNumber"
+  }
+}
