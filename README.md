@@ -126,6 +126,8 @@ mvn test -DsuiteXmlFile=src/test/java/project/testngConfig/apiRegression.xml \
 
 ### CI Execution (GitLab)
 
+CI pipeline configuration uses sanitized placeholders for internal infrastructure values (Docker image, proxy, Sonar URL).
+
 The pipeline is triggered via `SCHEDULED_JOB_TO_RUN` variable:
 
 | Variable Value | What Runs                                                     |
