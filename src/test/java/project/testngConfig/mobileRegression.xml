@@ -24,25 +24,25 @@
             </class>
         </classes>
     </test>
-    <test name="iPhone 14 Pro Max">
-        <parameter name="deviceNameiOS" value="iPhone 14 Pro Max"></parameter>
-        <parameter name="osVersioniOS" value="16"></parameter>
+    <test name="Samsung Galaxy S23 Ultra">
+        <parameter name="deviceNameAndroid" value="Samsung Galaxy S23 Ultra"></parameter>
+        <parameter name="deviceNameAndroid" value="12.0"></parameter>
         <classes>
             <class name="project.runner.MobileRunner">
             </class>
         </classes>
     </test>
-    <test name="iPhone SE 2020">
-        <parameter name="deviceNameiOS" value="iPhone SE 2020"></parameter>
-        <parameter name="osVersioniOS" value="16"></parameter>
+    <test name="Samsung Galaxy S23 Ultra">
+        <parameter name="deviceNameAndroid" value="Samsung Galaxy S23 Ultra"></parameter>
+        <parameter name="deviceNameAndroid" value="11.0"></parameter>
         <classes>
             <class name="project.runner.MobileRunner">
             </class>
         </classes>
     </test>
-    <test name="iPhone 13 Pro">
-        <parameter name="deviceNameiOS" value="iPhone 13 Pro"></parameter>
-        <parameter name="osVersioniOS" value="15"></parameter>
+    <test name="Samsung Galaxy S23 Ultra">
+        <parameter name="deviceNameAndroid" value="Samsung Galaxy S23 Ultra"></parameter>
+        <parameter name="deviceNameAndroid" value="13.0"></parameter>
         <classes>
             <class name="project.runner.MobileRunner">
             </class>
